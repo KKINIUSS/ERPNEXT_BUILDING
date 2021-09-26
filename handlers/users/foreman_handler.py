@@ -7,6 +7,8 @@ import datetime
 from loader import bot
 from states.foreman import foreman
 from keyboards.inline.foreman_menu import foreman_menu
+import mariadb
+from data.config import user, password, host, port, database
 
 @dp.message_handler(text="Начать рабочий день", state=foreman.start_job)
 async def join_session(message: Message):
@@ -17,6 +19,14 @@ async def join_session(message: Message):
 
 @dp.callback_query_handler(text_contains="serv:Журнал учёта рабочих", state=foreman.job)
 async def check_time(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     cur.execute("select fio, telegramid from `tabWorker activity temp` where telegramidforeman=%s" %call.from_user.id)
     a = cur.fetchall()
     free_work = []
@@ -27,10 +37,19 @@ async def check_time(call: CallbackQuery, state=FSMContext):
         inline_keyboard=free_work,
     )
     await call.message.edit_text(text="Список отметившихся", reply_markup=foreman_btn)
+    conn.close()
     await foreman.activity_worker.set()
 
 @dp.callback_query_handler(state=foreman.activity_worker)
 async def free_work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     str = call.data
     if (str == "Назад"):
@@ -55,6 +74,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
                                      %(a[0][0], tg[0][0], time_work),reply_markup=foreman_choise_free_btn)
         await state.update_data(telegramid=str, fio=a[0][0], date_join=a[0][1], telegramidforeman=a[0][2], nameTaskActivity=a[0][3])
         await foreman.activity_worker_profile.set()
+    print("foreman activity off")
 
 @dp.callback_query_handler(state=foreman.activity_worker_profile)
 async def invite_team(call: CallbackQuery, state=FSMContext):
