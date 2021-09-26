@@ -74,10 +74,18 @@ async def free_work(call: CallbackQuery, state=FSMContext):
                                      %(a[0][0], tg[0][0], time_work),reply_markup=foreman_choise_free_btn)
         await state.update_data(telegramid=str, fio=a[0][0], date_join=a[0][1], telegramidforeman=a[0][2], nameTaskActivity=a[0][3])
         await foreman.activity_worker_profile.set()
-    print("foreman activity off")
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.activity_worker_profile)
 async def invite_team(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     stri = call.data
     telegram = call.from_user.id
@@ -161,12 +169,20 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         )
         await call.message.answer(text="Список отметившихся", reply_markup=foreman_btn)
         await foreman.activity_worker.set()
+    conn.close()
 
 
 @dp.callback_query_handler(text_contains="serv:Список подчиненных", state=foreman.job)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
-    print(1)
     cur.execute("select fio, telegramid from tabEmployer where status='Подтвержден' and telegramidforeman=%s" %call.from_user.id)
     a = cur.fetchall()
     free_work = []
@@ -179,9 +195,18 @@ async def work(call: CallbackQuery, state=FSMContext):
     )
     await call.message.edit_text(text="Список подчиненных", reply_markup=foreman_btn)
     await foreman.worker.set()
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.worker)
 async def free_work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     str = call.data
     if (str == "Назад"):
@@ -200,9 +225,18 @@ async def free_work(call: CallbackQuery, state=FSMContext):
                                      reply_markup=foreman_choise_free_btn)
         await state.update_data(fio=a[0][0], phone_number=a[0][1], telegramid=a[0][2], comment=a[0][3], photo=a[0][4], passport=a[0][5])
         await foreman.worker_profile.set()
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.worker_profile)
 async def invite_team(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     str = call.data
     telegram = call.from_user.id
@@ -220,10 +254,18 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         )
         await call.message.edit_text(text="Список подчиненных", reply_markup=foreman_btn)
         await foreman.worker.set()
-
+    conn.close()
 
 @dp.callback_query_handler(text_contains="serv:Список отчетов", state=foreman.job)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     cur.execute("select distinct worker_name, telegramid"
                 " from `tabWorker report` where status='На рассмотрении' and telegramidforeman=%s" %call.from_user.id)
@@ -240,11 +282,19 @@ async def work(call: CallbackQuery, state=FSMContext):
     )
     await call.message.edit_text(text="Список отчетов", reply_markup=foreman_btn)
     await foreman.report_temp.set()
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.report_temp)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
-    print(1)
     stri = call.data
     if(stri == "Назад"):
         await call.message.edit_text(text="Главное меню", reply_markup=foreman_menu)
@@ -268,20 +318,26 @@ async def work(call: CallbackQuery, state=FSMContext):
         )
         await call.message.edit_text(text="Список отчетов рабочего %s" %c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.report_temp_down)
 async def free_work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     str = call.data
     if (str == "Назад"):
-        print(1)
         cur.execute(
             "select distinct worker_name, telegramid"
             " from `tabWorker report` where status='На рассмотрении' and telegramidforeman=%s" % call.from_user.id)
         a = cur.fetchall()
         free_work = []
-        print(a)
-        b = []
         for i in a:
             free_work.append([InlineKeyboardButton(text=i[0], callback_data=i[1])])
         free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
@@ -314,9 +370,18 @@ async def free_work(call: CallbackQuery, state=FSMContext):
                                 foreman_report_name=a[0][7], telegramid_report_forename=a[0][8],
                                 foreman_report_phone_number=a[0][9], date=a[0][10], task_name=a[0][11])
         await foreman.report_temp_profile.set()
+    conn.close()
 
 @dp.callback_query_handler(state=foreman.report_temp_profile)
 async def invite_team(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     stri = call.data
     if (stri == "Назад"):
@@ -396,8 +461,18 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(inline_keyboard=free_work,)
         await call.message.answer("Пожалуйста, напишите причину отклонения отчёта. \nВы можете нажать `Назад`, чтобы не писать комментарий.", reply_markup=foreman_btn)
         await foreman.cancel_report.set()
+    conn.close()
+
 @dp.callback_query_handler(state=foreman.cancel_report)
 async def back_to_profile(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     call_back = call.data
     await call.message.answer("Отчёт отклонён")
     if(call_back == "Назад"):
@@ -426,9 +501,18 @@ async def back_to_profile(call: CallbackQuery, state=FSMContext):
         )
         await call.message.edit_text(text="Список отчетов рабочего %s" % c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
+    conn.close()
 
 @dp.message_handler(state=foreman.cancel_report)
 async def cancel_report(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     data = await state.get_data()
     mes = message.text
     btn= [[InlineKeyboardButton(text="Понятно", callback_data="Понятно")]]
@@ -453,6 +537,7 @@ async def cancel_report(message: Message, state=FSMContext):
     )
     await message.answer(text="Список отчетов рабочего %s" % c[0][0], reply_markup=foreman_btn)
     await foreman.report_temp_down.set()
+    conn.close()
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=foreman.job)
 async def end_session(call: CallbackQuery, state=FSMContext):
     now = datetime.datetime.now()

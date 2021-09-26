@@ -13,8 +13,19 @@ from keyboards.default.start import start_keyboard
 from states.worker import worker
 from keyboards.default.foreman_job import foreman_start_job
 from keyboards.default.worker_job import worker_start_job
+import mariadb
+from data.config import user, password, host, port, database
+
 @dp.message_handler(text="Проверить наличие обновлений", state=worker.no_job)
 async def no_job(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     cur.execute("select foreman, telegramidforeman from tabWorker where telegramid=%s" %message.from_user.id)
     a = cur.fetchall()
@@ -25,8 +36,17 @@ async def no_job(message: Message, state=FSMContext):
         await message.answer("Вы присоединились к %s" %a[0][0], reply_markup=worker_start_job)
         await message.answer('Нажмите "Начать рабочий день", чтобы выйти на смену')
         await state.finish()
+    conn.close()
 @dp.message_handler(state=wait.ver)
 async def waiting(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     while(1):
         conn.commit()
         cur.execute("select * from tabEmployer where name=%d" %message.from_user.id)
@@ -53,8 +73,18 @@ async def waiting(message: Message, state=FSMContext):
         cur.execute("insert into `tabWorker Free` (name ,creation ,owner , enable, fio, phone_number, telegramid, ,dateobj, object, photo_worker, ,photo_passport)")
     await message.answer("Добрый день, вам выдали роль: %s. Вы можете начать свой рабочий день." %role[0][0], reply_markup=worker_start_job)
     await state.finish()
+    conn.close()
+
 @dp.message_handler(state=wait_foremane.ver)
 async def waiting(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     cur.execute("select * from tabProrab where name=%d and enable=0" %message.from_user.id)
     a = cur.fetchall()
@@ -64,3 +94,4 @@ async def waiting(message: Message, state=FSMContext):
     else:
         await message.answer("Вы верифицированы, нажмите копку внизу чтобы начать работать!", reply_markup=worker_start_job)
         await state.finish()
+    conn.close()

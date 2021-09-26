@@ -8,20 +8,23 @@ from aiogram.dispatcher import FSMContext
 from keyboards.default.cancel import cancel
 from keyboards.default.start import start_keyboard
 from data.config import loc_photo_worker, loc_photo_foreman, loc_pass_worker, loc_pass_foreman
-from database.connect_db import conn, cur, cur1
 from datetime import datetime
 import re
 from loader import bot
 from data.config import example_photo
-from utils.format import format_phone
-from states.wait_state import wait, wait_foremane
-from states.worker import worker
-from states.foreman import foreman
-from keyboards.default.worker_job import worker_start_job
-from keyboards.default.foreman_job import foreman_start_job
+import mariadb
+from data.config import user, password, host, port, database
 mes = ''
 @dp.message_handler(text="Зарегистрироваться", state=None)
 async def enter_reg(message: Message):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     mes = message.from_user.id
     cur.execute("select telegramid from `tabWorker Free` where telegramid=%d" %mes)
@@ -34,7 +37,7 @@ async def enter_reg(message: Message):
         await message.answer("При желании вы всегда можете выйти в главное меню, нажав кнопку отмена", reply_markup=cancel)
         await message.answer("Введите ФИО")
         await reg.fio.set()
-
+    conn.close()
 
 @dp.message_handler(state=reg.fio)
 async def reg_fio(message: Message, state: FSMContext):
@@ -101,6 +104,14 @@ async def reg_passport(message, state: FSMContext):
 
 @dp.callback_query_handler(text_contains="reg", state=reg.check)
 async def reg_check(call: CallbackQuery, state: FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     now = datetime.now()
     callback_data = call.data
     mas = []
@@ -115,3 +126,4 @@ async def reg_check(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer("Начнём сначала! Введите ФИО.\n")
         await reg.fio.set()
+    conn.close()

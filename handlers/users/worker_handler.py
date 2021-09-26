@@ -1,17 +1,26 @@
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from loader import dp
 from aiogram.dispatcher import FSMContext
-from database.connect_db import conn, cur, cur1
 import datetime
 from keyboards.default.worker_job import worker_start_job
 from states.worker import worker
 from keyboards.inline.worker import worker_menu, worker_menu_company
 from keyboards.default.worker_no_job import worker_no_job
+import mariadb
+from data.config import user, password, host, port, database
 
 subject_task = ""
 parent_task = ""
 @dp.message_handler(state=worker.start_job)
 async def join_session(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     tgid = message.from_user.id
     cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" %tgid)
     name = cur.fetchall()
@@ -26,6 +35,8 @@ async def join_session(message: Message, state=FSMContext):
         now = datetime.datetime.now()
         await message.answer("Добрый день, сегодня %s число." %now.strftime("%d-%m-%Y"), reply_markup=worker_menu)
         await worker.job.set()
+    conn.close()
+
 @dp.callback_query_handler(text_contains="serv:Перевести в термины компании", state=worker.job)
 async def translate(call: CallbackQuery, state=FSMContext):
     await state.update_data(translate="company")
@@ -40,6 +51,14 @@ async def translate(call: CallbackQuery, state=FSMContext):
 
 @dp.callback_query_handler(text_contains="serv:Сделать отчет", state=worker.job)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
     cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
@@ -88,9 +107,17 @@ async def work(call: CallbackQuery, state=FSMContext):
             )
         await call.message.edit_text(text="Разделы работ", reply_markup=foreman_btn)
         await worker.section_task.set()
-
+    conn.close()
 @dp.callback_query_handler(state=worker.section_task)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
     data = await state.get_data()
@@ -151,9 +178,18 @@ async def work(call: CallbackQuery, state=FSMContext):
             await state.update_data(parent_task_name=str, parent_task_subject=subject[0][0])
             await call.message.edit_text(text="Работы в разделе %s" %subject[0][0], reply_markup=foreman_btn)
             await worker.input_task.set()
+    conn.close()
 
 @dp.callback_query_handler(state=worker.search)
 async def back_search(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     if(call.data == 'Назад'):
         data = await state.get_data()
         conn.commit()
@@ -195,9 +231,18 @@ async def back_search(call: CallbackQuery, state=FSMContext):
             )
         await call.message.edit_text(text="Разделы работ", reply_markup=foreman_btn)
         await worker.section_task.set()
+    conn.close()
 
 @dp.message_handler(state=worker.search)
 async def search_show(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     params = "%" + message.text + "%"
     data = await state.get_data()
     cur.execute("select object from tabEmployer where name=?", [message.from_user.id])
@@ -268,8 +313,18 @@ async def search_show(message: Message, state=FSMContext):
             )
             await message.answer("Нет результатов, попробуйте ввести название задачи более точно.", reply_markup=foreman_btn)
             await worker.search.set()
+    conn.close()
+
 @dp.callback_query_handler(state=worker.input_task)
 async def work(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
     cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
@@ -335,9 +390,18 @@ async def work(call: CallbackQuery, state=FSMContext):
             )
             await call.message.edit_text(text="Введите объем выполненной работы")
             await worker.reg_report.set()
+    conn.close()
 
 @dp.message_handler(state=worker.reg_report)
 async def free_work(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     tgid = message.from_user.id
     cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
@@ -399,9 +463,18 @@ async def free_work(message: Message, state=FSMContext):
         await state.update_data(parent_task_name=str, parent_task_subject=subject[0][0])
         await message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
         await worker.input_task.set()
+    conn.close()
 
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=worker.job)
 async def end_session(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
     cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
@@ -428,5 +501,5 @@ async def end_session(call: CallbackQuery, state=FSMContext):
             await call.message.delete()
             await call.message.answer(text="Вы закончили рабочий день", reply_markup=worker_start_job)
             await state.finish()
-
+    conn.close()
 
