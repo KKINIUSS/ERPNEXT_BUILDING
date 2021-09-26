@@ -2,7 +2,6 @@ from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InlineKey
 from loader import dp
 from aiogram.dispatcher import FSMContext
 from keyboards.default.foreman_job import foreman_start_job
-from database.connect_db import conn, cur, cur1
 import datetime
 from loader import bot
 from states.foreman import foreman

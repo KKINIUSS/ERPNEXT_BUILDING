@@ -5,7 +5,6 @@ from keyboards.default.start import start_keyboard
 from loader import dp
 from states.foreman import foreman
 from states.wait_state import wait, wait_foremane
-from database.connect_db import cur, conn
 from states.login_at_user import user_status
 from states.worker import worker
 from handlers.users.registration_handler import mes
