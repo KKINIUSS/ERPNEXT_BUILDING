@@ -355,7 +355,7 @@ async def free_work(message: Message, state=FSMContext):
         a = cur.fetchall()
         cur.execute("select phone_number from tabEmployer where telegramid=%s" %a[0][5])
         phone_foreman = cur.fetchall()
-        mas = [data.get("task_name"), st, datetime.datetime.now(), "Administrator", data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
+        mas = [data.get("task_name"), st, datetime.datetime.now().date(), "Administrator", data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
                tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6]]
         cur.execute("insert into `tabWorker report` (task_name, name ,creation ,owner, "
                     "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments)"
