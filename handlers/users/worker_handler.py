@@ -187,7 +187,7 @@ async def search_show(message: Message, state=FSMContext):
     cur.execute("select object from tabEmployer where name=?", [message.from_user.id])
     object = cur.fetchall()
     free_work = []
-    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=NULL")
+    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
     task = cur.fetchall()
     if(task != []):
         if(len(task) <= 49):
