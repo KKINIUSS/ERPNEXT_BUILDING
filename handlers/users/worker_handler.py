@@ -284,7 +284,7 @@ async def search_show(message: Message, state=FSMContext):
             await worker.search.set()
     else:
         free_work = []
-        cur.execute("select subject, name from tabTask where is_group='0' and project='%s' and subject like '%s'" %(object[0][0], params))
+        cur.execute("select subject, name, parent_task from tabTask where is_group='0' and project='%s' and subject like '%s'" %(object[0][0], params))
         task = cur.fetchall()
         if(task != []):
             if(len(task) <= 49):
