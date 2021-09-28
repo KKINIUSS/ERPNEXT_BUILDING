@@ -449,7 +449,7 @@ async def search_reg_report(message: Message, state=FSMContext):
         parent_task_mas = [name1[0][0]]
         free_work = []
         params = data.get("search_query")
-        cur.execute(f"select name from tabTask where is_group='0' and project={object[0][0]} and (subject like '{params}' or subject_company like '{params}') and parent_task={data.get('search_parent_task')}")
+        cur.execute(f"select name from tabTask where is_group='0' and project={object[0][0]} and (subject like '{params}' or subject_company like '{params}') and parent_task='{data.get('search_parent_task')}'")
         task = cur.fetchall()
         for i in task:
             cur.execute("select subject, subject_company from tabTask where name=?", [i[0]])
