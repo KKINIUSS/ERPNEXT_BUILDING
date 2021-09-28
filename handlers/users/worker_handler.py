@@ -187,7 +187,7 @@ async def search_show(message: Message, state=FSMContext):
     cur.execute("select object from tabEmployer where name=?", [message.from_user.id])
     object = cur.fetchall()
     free_work = []
-    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
+    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
     task = cur.fetchall()
     if(task != []):
         if(len(task) <= 49):
@@ -264,7 +264,7 @@ async def view_search_task(call: CallbackQuery, state=FSMContext):
         data = await state.get_data()
         await state.update_data(search_parent_task=call.data)
         cur.execute(f"select name, subject, subject_company from tabTask where is_group='0' and project='{object[0][0]}' and (subject like '{data.get('search_query')}' or "
-                    f"subject_company like '{data.get('search_query')}' and parent_task='{call.data}'")
+                    f"subject_company like '{data.get('search_query')}') and parent_task='{call.data}'")
         task = cur.fetchall()
         free_work = []
         for i in task:
@@ -370,8 +370,8 @@ async def work(call: CallbackQuery, state=FSMContext):
             object = cur.fetchall()
             free_work = []
             params = data.get("search_query")
-            cur.execute(f"select DISTINCT parent_task from tabTask where is_group='1' and project='{object[0][0]}' "
-                        f"and (subject like '{params}' or subject_company like '{params}' and parent_task!=''")
+            cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and project='{object[0][0]}' "
+                        f"and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
             task = cur.fetchall()
             for i in task:
                 cur.execute("select subject, subject_company from tabTask where name=?", [i[0]])
