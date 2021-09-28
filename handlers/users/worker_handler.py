@@ -278,7 +278,11 @@ async def view_search_task(call: CallbackQuery, state=FSMContext):
             inline_keyboard=free_work,
         )
         cur.execute(f"select subject, subject_company from tabTask where name='{call.data}'")
-        task_name = cur.fetchall()
+        p = cur.fetchall()
+        if(p[0][1]):
+            task_name = p[0][1]
+        else:
+            task_name = p[0][0]
         await call.message.edit_text(f"Задачи в разделе {task_name} по запросу {data.get('search_query')}", reply_markup=foreman_btn)
         await worker.search_input_task.set()
 
