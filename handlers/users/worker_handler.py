@@ -292,12 +292,16 @@ async def search_show(message: Message, state=FSMContext):
                     print(i)
                     cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?", [i[1]])
                     term_customer = cur.fetchall()
-                    cur.execute("select subject from tabTask where name=?", [i[2]])
+                    cur.execute("select term_customer, term_worker from 'tabDictionary reference book' where name=?", [i[2]])
                     parent = cur.fetchall()
-                    if (term_customer[0][1]):
-                        free_work.append([InlineKeyboardButton(text=f"[{parent[0][0]}]" + term_customer[0][1], callback_data=i[1])])
+                    if(parent[0][1]):
+                        prnt = parent[0][1]
                     else:
-                        free_work.append([InlineKeyboardButton(text=f"[{parent[0][0]}]" + term_customer[0][0], callback_data=i[1])])
+                        prnt = parent[0][0]
+                    if (term_customer[0][1]):
+                        free_work.append([InlineKeyboardButton(text=f"[{prnt}]" + term_customer[0][1], callback_data=i[1])])
+                    else:
+                        free_work.append([InlineKeyboardButton(text=f"[{prnt}]" + term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
                 foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
