@@ -10,3 +10,6 @@ class worker(StatesGroup):
     input_task = State()
     reg_report = State()
     search = State()
+    search_task = State()
+    search_input_task = State()
+    search_reg_report = State()
