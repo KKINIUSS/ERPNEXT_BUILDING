@@ -249,15 +249,17 @@ async def search_show(message: Message, state=FSMContext):
     object = cur.fetchall()
     if (data.get("translate") == "customer"):
         free_work = []
-        cur.execute("select subject, name from tabTask where is_group='0' and project='%s' and subject like '%s'" %(object[0][0], params))
+        cur.execute("select subject, name, parent_task from tabTask where is_group='0' and project='%s' and subject like '%s'" %(object[0][0], params))
         task = cur.fetchall()
         if(task != []):
             if(len(task) <= 49):
                 for i in task:
                     cur.execute("select term_customer from `tabDictionary reference book` where name=?", [i[1]])
                     term_customer = cur.fetchall()
-                    free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
-                free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                    cur.execute("select subject from tabTask where name=?", [i[2]])
+                    parent = cur.fetchall()
+                    free_work.append([InlineKeyboardButton(text=f"[{parent[0][0]}]" + term_customer[0][0], callback_data=i[1])])
+                    free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
                 foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
@@ -289,10 +291,12 @@ async def search_show(message: Message, state=FSMContext):
                 for i in task:
                     cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?", [i[1]])
                     term_customer = cur.fetchall()
+                    cur.execute("select subject from tabTask where name=?", [i[2]])
+                    parent = cur.fetchall()
                     if (term_customer[0][1]):
-                        free_work.append([InlineKeyboardButton(text=term_customer[0][1], callback_data=i[1])])
+                        free_work.append([InlineKeyboardButton(text=f"[{parent[0][0]}]" + term_customer[0][1], callback_data=i[1])])
                     else:
-                        free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
+                        free_work.append([InlineKeyboardButton(text=f"[{parent[0][0]}]" + term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
                 foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
