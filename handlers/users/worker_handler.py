@@ -381,7 +381,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                 else:
                     task_name = parent[0][0]
                 free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
-                free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+            free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
             foreman_btn = InlineKeyboardMarkup(row_width=1,
                                                inline_keyboard=free_work,
                                                )
