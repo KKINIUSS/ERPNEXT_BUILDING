@@ -336,8 +336,7 @@ async def work(call: CallbackQuery, state=FSMContext):
     cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
-    cur.execute(
-        "select fio, telegramidforeman, foreman, object, phone_number from tabWorker where telegramid=%s" % tgid)
+    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
     name = cur.fetchall()
     if (not name):
         await call.message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
@@ -350,9 +349,9 @@ async def work(call: CallbackQuery, state=FSMContext):
             data = await state.get_data()
             conn.commit()
             print(21)
-            cur.execute("select telegramidforeman from tabWorker where telegramid=%s" % call.from_user.id)
+            cur.execute("select telegramidforeman from tabEmployer where telegramid=%s" % call.from_user.id)
             tgid_for = cur.fetchall()
-            cur.execute("select object from tabProrab where telegramid=%s" % tgid_for[0][0])
+            cur.execute("select object from tabEmployer where telegramid=%s" % tgid_for[0][0])
             proj = cur.fetchall()
             print(proj)
             mas = []
