@@ -289,6 +289,7 @@ async def search_show(message: Message, state=FSMContext):
         if(task != []):
             if(len(task) <= 49):
                 for i in task:
+                    print(i)
                     cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?", [i[1]])
                     term_customer = cur.fetchall()
                     cur.execute("select subject from tabTask where name=?", [i[2]])
