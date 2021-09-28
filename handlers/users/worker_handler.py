@@ -86,7 +86,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                 free_work.append([InlineKeyboardButton(text=parent[0][0], callback_data=i[0])])
             free_work.append([InlineKeyboardButton(text="Поиск задачи 🔎", callback_data="Поиск")])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
         else:
@@ -102,7 +102,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                         free_work.append([InlineKeyboardButton(text=parent[0][0], callback_data=i[0])])
             free_work.append([InlineKeyboardButton(text="Поиск задачи 🔎", callback_data="Поиск")])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
         await call.message.edit_text(text="Разделы работ", reply_markup=foreman_btn)
@@ -153,7 +153,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                     term_customer = cur.fetchall()
                     free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
             else:
@@ -170,7 +170,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                     else:
                         free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
             cur.execute("select subject from tabTask where name='%s'" %str)
@@ -226,7 +226,7 @@ async def back_search(call: CallbackQuery, state=FSMContext):
                         free_work.append([InlineKeyboardButton(text=parent[0][0], callback_data=i[0])])
             free_work.append([InlineKeyboardButton(text="Поиск задачи 🔎", callback_data="Поиск")])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
         await call.message.edit_text(text="Разделы работ", reply_markup=foreman_btn)
@@ -258,14 +258,14 @@ async def search_show(message: Message, state=FSMContext):
                     term_customer = cur.fetchall()
                     free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
                 await message.answer("Результаты поиска", reply_markup=foreman_btn)
                 await worker.input_task.set()
             else:
                 free_work = [[InlineKeyboardButton(text="Назад", callback_data="Назад")]]
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
                 await message.answer(
@@ -274,7 +274,7 @@ async def search_show(message: Message, state=FSMContext):
                 await worker.search.set()
         else:
             free_work = [[InlineKeyboardButton(text="Назад", callback_data="Назад")]]
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
             await message.answer("Нет результатов, попробуйте ввести название задачи более точно.",
@@ -294,21 +294,21 @@ async def search_show(message: Message, state=FSMContext):
                     else:
                         free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
                 await message.answer("Результаты поиска", reply_markup=foreman_btn)
                 await worker.input_task.set()
             else:
                 free_work = [[InlineKeyboardButton(text="Назад", callback_data="Назад")]]
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
                 await message.answer("Результатов оказалось слишком много, попробуйте ввести название задачи более точно.", reply_markup=foreman_btn)
                 await worker.search.set()
         else:
             free_work = [[InlineKeyboardButton(text="Назад", callback_data="Назад")]]
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
             await message.answer("Нет результатов, попробуйте ввести название задачи более точно.", reply_markup=foreman_btn)
@@ -327,7 +327,8 @@ async def work(call: CallbackQuery, state=FSMContext):
     cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
-    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
+    cur.execute(
+        "select fio, telegramidforeman, foreman, object, phone_number from tabWorker where telegramid=%s" % tgid)
     name = cur.fetchall()
     if (not name):
         await call.message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
@@ -335,14 +336,19 @@ async def work(call: CallbackQuery, state=FSMContext):
     else:
         conn.commit()
         str = call.data
+        data = await state.get_data()
         if (str == "Назад"):
             data = await state.get_data()
             conn.commit()
-            cur.execute("select telegramidforeman from tabEmployer where telegramid=%s" % call.from_user.id)
+            print(21)
+            cur.execute("select telegramidforeman from tabWorker where telegramid=%s" % call.from_user.id)
             tgid_for = cur.fetchall()
-            cur.execute("select object from tabEmployer where telegramid=%s" % tgid_for[0][0])
+            cur.execute("select object from tabProrab where telegramid=%s" % tgid_for[0][0])
             proj = cur.fetchall()
-            mas = [proj[0][0]]
+            print(proj)
+            mas = []
+            mas.append(proj[0][0])
+            print(mas)
             cur.execute("select name from tabTask where is_group='1' and project=?", mas)
             await state.update_data(project=mas)
             section_task = cur.fetchall()
@@ -355,26 +361,26 @@ async def work(call: CallbackQuery, state=FSMContext):
                     cur.execute("select term_customer from `tabDictionary reference book` where name=?", name_mas)
                     parent = cur.fetchall()
                     free_work.append([InlineKeyboardButton(text=parent[0][0], callback_data=i[0])])
-                free_work.append([InlineKeyboardButton(text="Поиск задачи 🔎", callback_data="Поиск")])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
             else:
                 free_work = []
                 for i in section_task:
-                    name_mas = [i[0]]
+                    name_mas = []
+                    name_mas.append(i[0])
                     cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?",
                                 name_mas)
                     parent = cur.fetchall()
+                    print(parent)
                     if (parent[0] != ""):
                         if (parent[0][1] != ""):
                             free_work.append([InlineKeyboardButton(text=parent[0][1], callback_data=i[0])])
                         else:
                             free_work.append([InlineKeyboardButton(text=parent[0][0], callback_data=i[0])])
-                free_work.append([InlineKeyboardButton(text="Поиск задачи 🔎", callback_data="Поиск")])
                 free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-                foreman_btn = InlineKeyboardMarkup(
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
                     inline_keyboard=free_work,
                 )
             await call.message.edit_text(text="Разделы работ", reply_markup=foreman_btn)
@@ -385,7 +391,7 @@ async def work(call: CallbackQuery, state=FSMContext):
             await state.update_data(task_name=str, task_subject=task_name[0][0])
             free_work = []
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
             await call.message.edit_text(text="Введите объем выполненной работы")
@@ -440,7 +446,7 @@ async def free_work(message: Message, state=FSMContext):
                 term_customer = cur.fetchall()
                 free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
         else:
@@ -455,7 +461,7 @@ async def free_work(message: Message, state=FSMContext):
                 else:
                     free_work.append([InlineKeyboardButton(text=term_customer[0][0], callback_data=i[1])])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
                 inline_keyboard=free_work,
             )
         cur.execute("select subject from tabTask where name=?", parent_task_mas)
