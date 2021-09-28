@@ -292,7 +292,7 @@ async def search_show(message: Message, state=FSMContext):
                     print(i)
                     cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?", [i[1]])
                     term_customer = cur.fetchall()
-                    cur.execute("select term_customer, term_worker from 'tabDictionary reference book' where name=?", [i[2]])
+                    cur.execute("select term_customer, term_worker from `tabDictionary reference book` where name=?", [i[2]])
                     parent = cur.fetchall()
                     if(parent[0][1]):
                         prnt = parent[0][1]
