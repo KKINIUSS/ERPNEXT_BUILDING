@@ -327,7 +327,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                                                inline_keyboard=free_work,
                                                )
             await call.message.edit_text("Разделы работ", reply_markup=foreman_btn)
-            await worker.search_task.set()
+            await worker.section_task.set()
         else:
             cur.execute("select subject from tabTask where name='%s'" % str)
             task_name = cur.fetchall()
@@ -465,7 +465,7 @@ async def search_reg_report(message: Message, state=FSMContext):
         else:
             task_name = parent[0][0]
         await message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}", reply_markup=foreman_btn)
-        await worker.input_task.set()
+        await worker.search_input_task.set()
     conn.close()
 
 @dp.message_handler(state=worker.reg_report)
