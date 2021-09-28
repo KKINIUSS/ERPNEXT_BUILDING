@@ -463,7 +463,7 @@ async def search_reg_report(message: Message, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(row_width=1,
                                            inline_keyboard=free_work,
                                            )
-        cur.execute(f"select subject, subject_company from tabTask where name={data.get('search_parent_name')}")
+        cur.execute(f"select subject, subject_company from tabTask where name={data.get('search_parent_task')}")
         parent = cur.fetchall()
         if(parent[0][1]):
             task_name = parent[0][1]
