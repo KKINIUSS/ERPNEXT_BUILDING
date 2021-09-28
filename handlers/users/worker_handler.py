@@ -326,6 +326,8 @@ async def work(call: CallbackQuery, state=FSMContext):
             foreman_btn = InlineKeyboardMarkup(row_width=1,
                                                inline_keyboard=free_work,
                                                )
+            await call.message.edit_text("Разделы работ", reply_markup=foreman_btn)
+            await worker.search_task.set()
         else:
             cur.execute("select subject from tabTask where name='%s'" % str)
             task_name = cur.fetchall()
