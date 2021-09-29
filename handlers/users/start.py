@@ -154,7 +154,7 @@ async def join_job(message: Message):
 
 @dp.message_handler(text="/back", state="*")
 async def back_from_reg(message: Message, state=FSMContext):
-    await message.answer("Вы вернулись в главное меню", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Нажмите /start, чтобы продолжить работу с ботом", reply_markup=ReplyKeyboardRemove())
     await state.finish()
 
 @dp.callback_query_handler(text_contains="Понятно", state="*")
