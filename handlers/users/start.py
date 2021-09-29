@@ -106,7 +106,7 @@ async def join_job(message: Message):
                     cur.execute("select telegramidforeman, fio from tabEmployer where telegramid=%s" % message.from_user.id)
                     tg = cur.fetchall()
                     st = str(now) + " " + str(message.from_user.id)
-                    mas = [st, now, "Administrator", tg[0][1], datetime.now().strftime('%Y-%m-%d'), None, message.from_user.id, tg[0][0]]
+                    mas = [st, now, "Administrator", tg[0][1], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, message.from_user.id, tg[0][0]]
                     cur.execute("insert into `tabWorker activity temp` (name ,creation ,owner, fio, date_join, "
                                 "date_end, telegramid, telegramidforeman)"
                         " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", mas)
