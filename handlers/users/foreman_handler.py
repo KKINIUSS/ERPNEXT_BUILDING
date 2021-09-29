@@ -146,8 +146,13 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         print(data.get("telegramid"))
         j = data.get("telegramid")
         j = int(j)
+        btn = []
+        btn.append([InlineKeyboardButton(text="Понятно", callback_data="Понятно")])
+        bnt_inl = InlineKeyboardMarkup(
+            inline_keyboard=btn,
+        )
         await bot.send_message(j, "Сообщение от прораба: "
-                                  "Ваш данные начала работы отклонены!")
+                                  "Ваш данные начала работы отклонены!", reply_markup=bnt_inl)
         mes = []
         mes.append(data.get("date_join"))
         mes.append(data.get("telegramid"))
