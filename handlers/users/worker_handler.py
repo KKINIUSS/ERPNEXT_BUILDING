@@ -523,21 +523,32 @@ async def free_work(message: Message, state=FSMContext):
         free_work = []
         cur.execute("select name, subject, subject_company  from tabTask where parent_task=? and pass_spec='1'", parent_task_mas)
         task = cur.fetchall()
-        for i in task:
-            if(i[2]):
-                task_name = i[2]
-            else:
-                task_name = i[1]
-            free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
-        free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-        foreman_btn = InlineKeyboardMarkup(row_width=1,
-            inline_keyboard=free_work,
-        )
-        cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
-        subject = cur.fetchall()
-        await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
-        await message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
-        await worker.input_task.set()
+        if(len(task) < 49):
+            for i in task:
+                if(i[2]):
+                    task_name = i[2]
+                else:
+                    task_name = i[1]
+                free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
+            free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
+                inline_keyboard=free_work,
+            )
+            cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
+            subject = cur.fetchall()
+            await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
+            await message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
+            await worker.input_task.set()
+        else:
+            free_work = []
+            free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+            foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                               inline_keyboard=free_work,
+                                               )
+            await message.answer(
+                text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.",
+                reply_markup=foreman_btn)
+            await worker.input_task.set()
     conn.close()
 
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=worker.job)
