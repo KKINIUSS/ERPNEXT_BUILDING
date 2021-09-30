@@ -43,7 +43,7 @@ async def show_menu(message: Message):
                 else:
                     await message.answer('Добрый день! Вы не прикреплены к объекту.', reply_markup=foreman_start_job)
                     conn.close()
-            elif(a[0][2]=='Рабочий'):
+            elif(a[0][2]=='Специалист'):
                 if(a[0][3] != None):
                     await message.answer('Вас приветствует персональный помощник "Цифрум" "! \nНажмите кнопку "Начать рабочий день", чтобы начать работу.\n\n⚠️ Тех.поддержка https://t.me/auxiliume\n\n📞 Телефон тех. поддержки +79994601211 (Игорь)', disable_web_page_preview=True, reply_markup=worker_start_job)
                     conn.close()
@@ -100,7 +100,7 @@ async def join_job(message: Message):
                 else:
                     await message.answer('Добрый день! Вы не прикреплены к объекту.', reply_markup=foreman_start_job)
                     conn.close()
-            elif (a[0][2] == 'Рабочий'):
+            elif (a[0][2] == 'Специалист'):
                 if (a[0][3]):
                     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     cur.execute("select telegramidforeman, fio from tabEmployer where telegramid=%s" % message.from_user.id)
