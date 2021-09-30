@@ -63,7 +63,7 @@ async def work(call: CallbackQuery, state=FSMContext):
         cur.execute("select object from tabEmployer where telegramid=%s" %tgid_for[0][0])
         proj = cur.fetchall()
         mas = [proj[0][0]]
-        cur.execute("select name, subject_company, subject from tabTask where is_group='1' and project=?", mas)
+        cur.execute("select name, subject_company, subject from tabTask where is_group='1' and project=? and pass_spec='1'", mas)
         await state.update_data(project=mas)
         section_task = cur.fetchall()
         free_work = []
@@ -115,23 +115,32 @@ async def work(call: CallbackQuery, state=FSMContext):
             data = await state.get_data()
             mas = [str]
             free_work = []
-            cur.execute("select name, subject, subject_company from tabTask where parent_task=?", mas)
+            cur.execute("select name, subject, subject_company from tabTask where parent_task=? and pass_spec='1'", mas)
             task = cur.fetchall()
-            for i in task:
-                if(i[2]):
-                    task_subject = i[2]
-                else:
-                    task_subject = i[1]
-                free_work.append([InlineKeyboardButton(text=task_subject, callback_data=i[0])])
-            free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-            foreman_btn = InlineKeyboardMarkup(row_width=1,
-                inline_keyboard=free_work,
-            )
-            cur.execute(f"select subject from tabTask where name='{str}'")
-            subject = cur.fetchall()
-            await state.update_data(parent_task_name=str, parent_task_subject=subject[0][0])
-            await call.message.edit_text(text=f"Работы в разделе {subject[0][0]}", reply_markup=foreman_btn)
-            await worker.input_task.set()
+            if(len(task) < 49):
+                for i in task:
+                    if(i[2]):
+                        task_subject = i[2]
+                    else:
+                        task_subject = i[1]
+                    free_work.append([InlineKeyboardButton(text=task_subject, callback_data=i[0])])
+                free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
+                    inline_keyboard=free_work,
+                )
+                cur.execute(f"select subject from tabTask where name='{str}'")
+                subject = cur.fetchall()
+                await state.update_data(parent_task_name=str, parent_task_subject=subject[0][0])
+                await call.message.edit_text(text=f"Работы в разделе {subject[0][0]}", reply_markup=foreman_btn)
+                await worker.input_task.set()
+            else:
+                free_work = []
+                free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                                   inline_keyboard=free_work,
+                                                   )
+                await call.message.edit_text(text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.", reply_markup=foreman_btn)
+                await worker.input_task.set()
     conn.close()
 
 @dp.callback_query_handler(state=worker.search)
@@ -152,7 +161,7 @@ async def back_search(call: CallbackQuery, state=FSMContext):
         cur.execute("select object from tabEmployer where telegramid=%s" % tgid_for[0][0])
         proj = cur.fetchall()
         mas = [proj[0][0]]
-        cur.execute("select name, subject, subject_company from tabTask where is_group='1' and project=?", mas)
+        cur.execute("select name, subject, subject_company from tabTask where is_group='1' and project=? and pass_spec='1'", mas)
         section_task = cur.fetchall()
         await state.update_data(project=mas)
         free_work = []
@@ -187,12 +196,12 @@ async def search_show(message: Message, state=FSMContext):
     cur.execute("select object from tabEmployer where name=?", [message.from_user.id])
     object = cur.fetchall()
     free_work = []
-    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
+    cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and pass_spec='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
     task = cur.fetchall()
     if(task != []):
         if(len(task) <= 49):
             for i in task:
-                cur.execute("select subject, subject_company from tabTask where name=?", [i[0]])
+                cur.execute("select subject, subject_company from tabTask where name=? and pass_spec='1'", [i[0]])
                 parent = cur.fetchall()
                 if(parent[0][1]):
                     task_name = parent[0][1]
@@ -240,7 +249,7 @@ async def view_search_task(call: CallbackQuery, state=FSMContext):
         cur.execute("select object from tabEmployer where telegramid=%s" % tgid_for[0][0])
         proj = cur.fetchall()
         mas = [proj[0][0]]
-        cur.execute("select name, subject_company, subject from tabTask where is_group='1' and project=?", mas)
+        cur.execute("select name, subject_company, subject from tabTask where is_group='1' and project=? and pass_spec='1'", mas)
         await state.update_data(project=mas)
         section_task = cur.fetchall()
         free_work = []
@@ -264,7 +273,7 @@ async def view_search_task(call: CallbackQuery, state=FSMContext):
         data = await state.get_data()
         await state.update_data(search_parent_task=call.data)
         cur.execute(f"select name, subject, subject_company from tabTask where is_group='0' and project='{object[0][0]}' and (subject like '{data.get('search_query')}' or "
-                    f"subject_company like '{data.get('search_query')}') and parent_task='{call.data}'")
+                    f"subject_company like '{data.get('search_query')}') and parent_task='{call.data}' and pass_spec='1'")
         task = cur.fetchall()
         free_work = []
         for i in task:
@@ -277,7 +286,7 @@ async def view_search_task(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(row_width=1,
             inline_keyboard=free_work,
         )
-        cur.execute(f"select subject, subject_company from tabTask where name='{call.data}'")
+        cur.execute(f"select subject, subject_company from tabTask where name='{call.data}' and pass_spec='1'")
         p = cur.fetchall()
         if(p[0][1]):
             task_name = p[0][1]
@@ -316,7 +325,7 @@ async def work(call: CallbackQuery, state=FSMContext):
             proj = cur.fetchall()
             mas = []
             mas.append(proj[0][0])
-            cur.execute("select name, subject, subject_company from tabTask where is_group='1' and project=?", mas)
+            cur.execute("select name, subject, subject_company from tabTask where is_group='1' and project=? and pass_spec='1'", mas)
             await state.update_data(project=mas)
             section_task = cur.fetchall()
             free_work = []
@@ -334,7 +343,7 @@ async def work(call: CallbackQuery, state=FSMContext):
             await call.message.edit_text("Разделы работ", reply_markup=foreman_btn)
             await worker.section_task.set()
         else:
-            cur.execute("select subject from tabTask where name='%s'" % str)
+            cur.execute("select subject from tabTask where name='%s' and pass_spec='1'" % str)
             task_name = cur.fetchall()
             await state.update_data(task_name=str, task_subject=task_name[0][0])
             free_work = []
@@ -374,11 +383,11 @@ async def work(call: CallbackQuery, state=FSMContext):
             object = cur.fetchall()
             free_work = []
             params = data.get("search_query")
-            cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and project='{object[0][0]}' "
+            cur.execute(f"select DISTINCT parent_task from tabTask where is_group='0' and project='{object[0][0]}' and pass_spec='1'"
                         f"and (subject like '{params}' or subject_company like '{params}') and parent_task!=''")
             task = cur.fetchall()
             for i in task:
-                cur.execute("select subject, subject_company from tabTask where name=?", [i[0]])
+                cur.execute("select subject, subject_company from tabTask where name=? and pass_spec='1'", [i[0]])
                 parent = cur.fetchall()
                 if (parent[0][1]):
                     task_name = parent[0][1]
@@ -392,7 +401,7 @@ async def work(call: CallbackQuery, state=FSMContext):
             await call.message.edit_text("Результаты поиска", reply_markup=foreman_btn)
             await worker.search_task.set()
         else:
-            cur.execute("select subject from tabTask where name='%s'" % str)
+            cur.execute("select subject from tabTask where name='%s' and pass_spec='1'" % str)
             task_name = cur.fetchall()
             await state.update_data(task_name=str, task_subject=task_name[0][0])
             free_work = []
@@ -442,17 +451,17 @@ async def search_reg_report(message: Message, state=FSMContext):
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
-        cur.execute("select parent_task from tabTask where name=?", name_parent)
+        cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent)
         name1 = cur.fetchall()
         cur.execute(f"select object from tabEmployer where name='{message.from_user.id}'")
         object = cur.fetchall()
         parent_task_mas = [name1[0][0]]
         free_work = []
         params = data.get("search_query")
-        cur.execute(f"select name from tabTask where is_group='0' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task='{data.get('search_parent_task')}'")
+        cur.execute(f"select name from tabTask where is_group='0' and pass_spec='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task='{data.get('search_parent_task')}'")
         task = cur.fetchall()
         for i in task:
-            cur.execute("select subject, subject_company from tabTask where name=?", [i[0]])
+            cur.execute("select subject, subject_company from tabTask where name=? and pass_spec='1'", [i[0]])
             parent = cur.fetchall()
             if (parent[0][1]):
                 task_name = parent[0][1]
@@ -463,7 +472,7 @@ async def search_reg_report(message: Message, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(row_width=1,
                                            inline_keyboard=free_work,
                                            )
-        cur.execute(f"select subject, subject_company from tabTask where name='{data.get('search_parent_task')}'")
+        cur.execute(f"select subject, subject_company from tabTask where name='{data.get('search_parent_task')}' and pass_spec='1'")
         parent = cur.fetchall()
         if(parent[0][1]):
             task_name = parent[0][1]
@@ -508,11 +517,11 @@ async def free_work(message: Message, state=FSMContext):
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
-        cur.execute("select parent_task from tabTask where name=?", name_parent )
+        cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent )
         name1 = cur.fetchall()
         parent_task_mas = [name1[0][0]]
         free_work = []
-        cur.execute("select name, subject, subject_company  from tabTask where parent_task=?", parent_task_mas)
+        cur.execute("select name, subject, subject_company  from tabTask where parent_task=? and pass_spec='1'", parent_task_mas)
         task = cur.fetchall()
         for i in task:
             if(i[2]):
@@ -524,7 +533,7 @@ async def free_work(message: Message, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(row_width=1,
             inline_keyboard=free_work,
         )
-        cur.execute("select subject from tabTask where name=?", parent_task_mas)
+        cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
         subject = cur.fetchall()
         await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
         await message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
