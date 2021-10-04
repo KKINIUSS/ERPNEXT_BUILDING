@@ -157,6 +157,11 @@ async def back_from_reg(message: Message, state=FSMContext):
     await message.answer("Нажмите /start, чтобы продолжить работу с ботом", reply_markup=ReplyKeyboardRemove())
     await state.finish()
 
+@dp.message_handler(text="отмена", state="*")
+async def back_from_reg(message: Message, state=FSMContext):
+    await message.answer("Нажмите /start, чтобы продолжить работу с ботом", reply_markup=ReplyKeyboardRemove())
+    await state.finish()
+
 @dp.callback_query_handler(text_contains="Понятно", state="*")
 async def ok(call: CallbackQuery, state=FSMContext):
     if (call.data == 'Понятно'):
