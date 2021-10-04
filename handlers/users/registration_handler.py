@@ -27,16 +27,9 @@ async def enter_reg(message: Message):
     cur = conn.cursor()
     conn.commit()
     mes = message.from_user.id
-    cur.execute("select telegramid from `tabWorker Free` where telegramid=%d" %mes)
-    a = cur.fetchall()
-    cur.execute("select telegramid from tabWorker where telegramid=%d" % mes)
-    b = cur.fetchall()
-    if (a or b):
-        await message.answer("Вы уже зарегистрированны, либо ваш аккаунт еще не подтвердили.", reply_markup=start_keyboard)
-    else:
-        await message.answer("При желании вы всегда можете выйти в главное меню, нажав кнопку отмена", reply_markup=cancel)
-        await message.answer("Введите ФИО")
-        await reg.fio.set()
+    #await message.answer("При желании вы всегда можете выйти в главное меню, нажав кнопку отмена", reply_markup=cancel)
+    await message.answer("Введите ФИО")
+    await reg.fio.set()
     conn.close()
 
 @dp.message_handler(state=reg.fio)
