@@ -217,7 +217,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         await call.message.edit_text(text="Главное меню", reply_markup=foreman_menu)
         await foreman.job.set()
     else:
-        cur.execute("select fio, phone_number, telegramid, comments_foreman, photo_worker, photo_passport from tabEmployer where status='Подтвержден' and telegramid=%s" % str)
+        cur.execute("select fio, phone_number, telegramid, comments_foreman, photo, photo_pass from tabEmployer where status='Подтвержден' and telegramid=%s" % str)
         a = cur.fetchall()
         free_work = []
         #free_work.append([InlineKeyboardButton(text="Удалить", callback_data="Удалить")])
