@@ -27,7 +27,7 @@ async def enter_reg(message: Message):
     cur = conn.cursor()
     conn.commit()
     mes = message.from_user.id
-    #await message.answer("При желании вы всегда можете выйти в главное меню, нажав кнопку отмена", reply_markup=cancel)
+    await message.answer("При желании вы всегда можете выйти в главное меню, нажав кнопку отмена", reply_markup=cancel)
     await message.answer("Введите ФИО")
     await reg.fio.set()
     conn.close()
