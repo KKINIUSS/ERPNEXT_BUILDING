@@ -26,7 +26,7 @@ async def no_job(message: Message, state=FSMContext):
     )
     cur = conn.cursor()
     conn.commit()
-    cur.execute("select foreman, telegramidforeman from tabWorker where telegramid=%s" %message.from_user.id)
+    cur.execute("select foreman, telegramidforeman from tabEmployer where telegramid=%s" %message.from_user.id)
     a = cur.fetchall()
     if(not a):
         await message.answer("Вас еще не взяли на работу")
