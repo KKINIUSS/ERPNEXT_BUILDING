@@ -426,9 +426,10 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         job_value = a[0][3]
         job_max = b[0][0]
         job_current_value = b[0][1]
-        if(type(job_current_value) == None):
-            job_current_value = 0.
-        progress = (float(job_value) / float(job_max)) * 100
+        if(job_max != 0):
+            progress = (float(job_value) / float(job_max)) * 100
+        else:
+            progress = 0
         progress_amount = float(job_current_value) + float(job_value)
         mes = [progress_amount, float(progress), a[0][11]]
         cur.execute("update tabTask set progress_amount=?, progress=? where name=?", mes)
