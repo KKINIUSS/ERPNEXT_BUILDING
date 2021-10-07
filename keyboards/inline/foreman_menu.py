@@ -11,7 +11,7 @@ foreman_menu = InlineKeyboardMarkup(
             )
         ],
         [
-          InlineKeyboardButton(text="Журнал учёта рабочих", callback_data=f_m.new(name="Журнал учёта рабочих")
+          InlineKeyboardButton(text="Журнал учёта специалистов", callback_data=f_m.new(name="Журнал учёта специалистов")
             )
         ],
         [

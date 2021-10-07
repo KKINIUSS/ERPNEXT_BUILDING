@@ -73,7 +73,7 @@ async def show_menu(message: Message):
         conn.close()
 
 @dp.message_handler(text="Начать рабочий день", state="*")
-async def join_job(message: Message):
+async def join_job(message: Message, state: FSMContext):
     conn = mariadb.connect(
         user=user,
         password=password,
@@ -106,7 +106,8 @@ async def join_job(message: Message):
                     cur.execute("select telegramidforeman, fio from tabEmployer where telegramid=%s" % message.from_user.id)
                     tg = cur.fetchall()
                     st = str(now) + " " + str(message.from_user.id)
-                    mas = [st, now, "Administrator", tg[0][1], datetime.now().strftime('%Y-%m-%d %H:%M:%S'), None, message.from_user.id, tg[0][0]]
+                    time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    mas = [st, now, "Administrator", tg[0][1], time, None, message.from_user.id, tg[0][0]]
                     cur.execute("insert into `tabWorker activity temp` (name ,creation ,owner, fio, date_join, "
                                 "date_end, telegramid, telegramidforeman)"
                         " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", mas)
@@ -118,6 +119,7 @@ async def join_job(message: Message):
                     await bot.send_message(message.from_user.id, text="Главное меню", reply_markup=worker_menu_company)
                     conn.close()
                     await worker.job.set()
+                    await state.update_data(date_join=time)
                 else:
                     await message.answer("Добрый день, у вас нет руководителя, нажмите на кнопку, чтобы проверить обновления.\n\n⚠️ Тех.поддержка https://t.me/auxiliume\n\n📞 Телефон тех. поддержки +79994601211 (Игорь)", disable_web_page_preview=True, reply_markup=worker_no_job)
                     conn.close()

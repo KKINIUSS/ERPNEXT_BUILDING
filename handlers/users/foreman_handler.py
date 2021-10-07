@@ -16,7 +16,7 @@ async def join_session(message: Message):
     await foreman.job.set()
 
 
-@dp.callback_query_handler(text_contains="serv:Журнал учёта рабочих", state=foreman.job)
+@dp.callback_query_handler(text_contains="serv:Журнал учёта специалистов", state=foreman.job)
 async def check_time(call: CallbackQuery, state=FSMContext):
     conn = mariadb.connect(
         user=user,
@@ -69,7 +69,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
             inline_keyboard=free_work,
         )
         print(a[0][1])
-        await call.message.edit_text("Имя рабочего %s\nНомер телефона: %s\nВремя прихода на работу: %s"
+        await call.message.edit_text("Имя специалиста %s\nНомер телефона: %s\nВремя прихода на работу: %s"
                                      %(a[0][0], tg[0][0], time_work),reply_markup=foreman_choise_free_btn)
         await state.update_data(telegramid=str, fio=a[0][0], date_join=a[0][1], telegramidforeman=a[0][2], nameTaskActivity=a[0][3])
         await foreman.activity_worker_profile.set()
@@ -225,7 +225,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         foreman_choise_free_btn = InlineKeyboardMarkup(
             inline_keyboard=free_work,
         )
-        await call.message.edit_text("Профиль рабочего %s\nНомер телефона: %s\nТелеграм ID: %s\nКомментарий предыдущего прораба: %s\n" %(a[0][0], a[0][1], a[0][2], a[0][3]),
+        await call.message.edit_text("Профиль специалиста %s\nНомер телефона: %s\nТелеграм ID: %s\nКомментарий предыдущего прораба: %s\n" %(a[0][0], a[0][1], a[0][2], a[0][3]),
                                      reply_markup=foreman_choise_free_btn)
         await state.update_data(fio=a[0][0], phone_number=a[0][1], telegramid=a[0][2], comment=a[0][3], photo=a[0][4], passport=a[0][5])
         await foreman.worker_profile.set()
@@ -320,7 +320,7 @@ async def work(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(
             inline_keyboard=free_work,
         )
-        await call.message.edit_text(text="Список отчетов рабочего %s" %c[0][0], reply_markup=foreman_btn)
+        await call.message.edit_text(text="Список отчетов специалиста %s" %c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
     conn.close()
 
@@ -367,7 +367,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         cur.execute("select amount, progress_amount from tabTask where name=?", mis )
         b = cur.fetchall()
         print(a)
-        await call.message.edit_text("Название работы: %s\nРаздел работы: %s\nОбъем работ: %s\nВыполнено на текущих момент: %s\nОбщий объем работ: %s\nНомер телефона рабочего: %s\nИмя рабочего: %s" %(a[0][0], a[0][1], a[0][3], b[0][1], b[0][0], a[0][6], a[0][4]), reply_markup=foreman_choise_free_btn)
+        await call.message.edit_text("Название работы: %s\nРаздел работы: %s\nОбъем работ: %s\nВыполнено на текущих момент: %s\nОбщий объем работ: %s\nНомер телефона специалиста: %s\nИмя специалиста: %s" %(a[0][0], a[0][1], a[0][3], b[0][1], b[0][0], a[0][6], a[0][4]), reply_markup=foreman_choise_free_btn)
         await state.update_data(job=a[0][0], job_section=a[0][1], telegramid_report=a[0][5],
                                 photo_work=a[0][2], job_value=a[0][3],
                                 worker_name=a[0][4], phone_number_worker_report=a[0][6],
@@ -407,7 +407,7 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(
             inline_keyboard=free_work,
         )
-        await call.message.edit_text(text="Список отчетов рабочего %s" %c[0][0], reply_markup=foreman_btn)
+        await call.message.edit_text(text="Список отчетов специалиста %s" %c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
     elif(stri == "Принять"):
         now = datetime.datetime.now()
@@ -451,7 +451,7 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(
             inline_keyboard=free_work,
         )
-        await call.message.answer(text="Список отчетов рабочего %s" % c[0][0], reply_markup=foreman_btn)
+        await call.message.answer(text="Список отчетов специалиста %s" % c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
     elif (stri == "Отклонить"):
         data = await state.get_data()
@@ -504,7 +504,7 @@ async def back_to_profile(call: CallbackQuery, state=FSMContext):
         foreman_btn = InlineKeyboardMarkup(
             inline_keyboard=free_work,
         )
-        await call.message.edit_text(text="Список отчетов рабочего %s" % c[0][0], reply_markup=foreman_btn)
+        await call.message.edit_text(text="Список отчетов специалиста %s" % c[0][0], reply_markup=foreman_btn)
         await foreman.report_temp_down.set()
     conn.close()
 
@@ -540,7 +540,7 @@ async def cancel_report(message: Message, state=FSMContext):
     foreman_btn = InlineKeyboardMarkup(
         inline_keyboard=free_work,
     )
-    await message.answer(text="Список отчетов рабочего %s" % c[0][0], reply_markup=foreman_btn)
+    await message.answer(text="Список отчетов специалиста %s" % c[0][0], reply_markup=foreman_btn)
     await foreman.report_temp_down.set()
     conn.close()
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=foreman.job)

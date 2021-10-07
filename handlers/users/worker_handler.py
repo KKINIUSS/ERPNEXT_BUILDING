@@ -571,7 +571,8 @@ async def end_session(call: CallbackQuery, state=FSMContext):
     else:
         cur.execute("update tabEmployer set activity='0' where name=?", [call.from_user.id])
         conn.commit()
-        mas = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), call.from_user.id]
+        data = await state.get_data()
+        mas = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), data.get("date_join"), call.from_user.id]
         mes = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), tgid]
         cur.execute("select * from `tabWorker activity` where date_join=? and telegramid=?", mes)
         a = cur.fetchall()
