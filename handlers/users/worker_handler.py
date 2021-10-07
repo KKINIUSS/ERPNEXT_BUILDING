@@ -573,7 +573,7 @@ async def end_session(call: CallbackQuery, state=FSMContext):
         conn.commit()
         data = await state.get_data()
         mas = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), data.get("date_join"), call.from_user.id]
-        mes = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), tgid]
+        mes = [data.get("date_join"), tgid]
         cur.execute("select * from `tabWorker activity` where date_join=? and telegramid=?", mes)
         a = cur.fetchall()
         if(a):
