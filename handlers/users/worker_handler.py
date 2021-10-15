@@ -437,17 +437,16 @@ async def search_reg_report(message: Message, state=FSMContext):
         data = await state.get_data()
         mes = message.text
         st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
-        cur.execute(
-            "select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments from tabEmployer where telegramid=%s" % tgid)
+        cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
         a = cur.fetchall()
         cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
         phone_foreman = cur.fetchall()
         mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
                data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6]]
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6], a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
-                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments)"
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments, object)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
@@ -505,15 +504,15 @@ async def free_work(message: Message, state=FSMContext):
         data = await state.get_data()
         mes = message.text
         st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
-        cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments from tabEmployer where telegramid=%s" %tgid)
+        cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" %tgid)
         a = cur.fetchall()
         cur.execute("select phone_number from tabEmployer where telegramid=%s" %a[0][5])
         phone_foreman = cur.fetchall()
         mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator", data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6]]
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6], a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
-                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments)"
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments, object)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
