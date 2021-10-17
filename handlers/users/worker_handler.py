@@ -713,7 +713,7 @@ async def free_work(message: Message, state=FSMContext):
                         reply_markup=foreman_btn)
                     await worker.input_task.set()
             else:
-                btn = [InlineKeyboardButton(text="Нет", callback_data="Нет")]
+                btn = [[InlineKeyboardButton(text="Нет", callback_data="Нет")]]
                 btn_inl = InlineKeyboardMarkup(inline_keyboard=btn)
                 await state.update_data(job_value=mes)
                 await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ",
