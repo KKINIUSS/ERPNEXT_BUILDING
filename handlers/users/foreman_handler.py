@@ -55,7 +55,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         await call.message.edit_text(text="Главное меню", reply_markup=foreman_menu)
         await foreman.job.set()
     else:
-        cur.execute(f"select fio, time_join, telegramidforeman, name, date, telegramid from `tabWorker activity temp` where name='{str}'")
+        cur.execute(f"select fio, time_join, telegramidforeman, name, date, telegramid, role from `tabWorker activity temp` where name='{str}'")
         a = cur.fetchall()
         cur.execute(f"select phone_number from tabEmployer where name='{a[0][5]}'")
         tg = cur.fetchall()
@@ -67,7 +67,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         )
         await call.message.edit_text(f"Имя специалиста {a[0][0]}\nНомер телефона: {tg[0][0]}\n"
                                      f"Дата: {a[0][4]}\nВремя прихода на работу: {time_work}", reply_markup=foreman_choise_free_btn)
-        await state.update_data(telegramid=a[0][5], fio=a[0][0], time_join=a[0][1], date=a[0][4], telegramidforeman=a[0][2], date_worker=str)
+        await state.update_data(telegramid=a[0][5], fio=a[0][0], time_join=a[0][1], date=a[0][4], telegramidforeman=a[0][2], date_worker=str, role=a[0][6])
         await foreman.activity_worker_profile.set()
     conn.close()
 
@@ -98,9 +98,9 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         await foreman.activity_worker.set()
     elif(stri == "Принять"):
         data = await state.get_data()
-        mas = [data.get("date_worker"), datetime.datetime.now(), "Administrator", data.get("fio"), data.get("time_join"), '', data.get("telegramid"), data.get("telegramidforeman"), data.get("date")]
-        cur.execute("insert into `tabWorker activity` (name ,creation ,owner, fio, time_join, date_end, telegramid, telegramidforeman, date)"
-            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+        mas = [data.get("date_worker"), datetime.datetime.now(), "Administrator", data.get("fio"), data.get("time_join"), '', data.get("telegramid"), data.get("telegramidforeman"), data.get("date"), data.get("role")]
+        cur.execute("insert into `tabWorker activity` (name ,creation ,owner, fio, time_join, date_end, telegramid, telegramidforeman, date, role)"
+            " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
         cur.execute(f"delete from `tabWorker activity temp` where name='{data.get('date_worker')}'")
         conn.commit()
         cur.execute("select fio, telegramid, name from `tabWorker activity temp` where telegramidforeman=%s" % call.from_user.id)
@@ -325,7 +325,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         cur.execute("select amount, progress_amount from tabTask where name=?", mis )
         b = cur.fetchall()
         await call.message.edit_text(f"Название работы: {a[0][0]}\nРаздел работы: {a[0][1]}\nОбъем работ: {a[0][3]}\nВыполнено на текущих момент: {b[0][1]}\n"
-                                     f"Общий объем работ: {b[0][0]}\nНомер телефона специалиста: {a[0][6]}\nИмя специалиста: {a[0][4]}\nДата отчета: {a[0][10] + ' ' + a[0][13]}", reply_markup=foreman_choise_free_btn)
+                                     f"Общий объем работ: {b[0][0]}\nНомер телефона специалиста: {a[0][6]}\nИмя специалиста: {a[0][4]}\n", reply_markup=foreman_choise_free_btn)
         await state.update_data(job=a[0][0], job_section=a[0][1], telegramid_report=a[0][5],
                                 photo_work=a[0][2], job_value=a[0][3],
                                 worker_name=a[0][4], phone_number_worker_report=a[0][6],
