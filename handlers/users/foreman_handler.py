@@ -514,6 +514,7 @@ async def end_session(call: CallbackQuery, state=FSMContext):
     data = await state.get_data()
     print(data.get('date_foreman'))
     cur.execute(f"update `tabWorker activity` set time_end='{datetime.datetime.now().strftime('%H:%M:%S')}' where name='{data.get('date_foreman')}'")
+    conn.commit()
     await call.message.delete()
     await call.message.answer(text="Вы закончили рабочий день", reply_markup=foreman_start_job)
     await state.finish()
