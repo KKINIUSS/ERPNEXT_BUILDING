@@ -141,7 +141,6 @@ async def work(call: CallbackQuery, state=FSMContext):
                                                    )
                 await call.message.edit_text(text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.", reply_markup=foreman_btn)
                 await worker.input_task.set()
-                print(1)
     conn.close()
 
 @dp.callback_query_handler(state=worker.search)
@@ -354,7 +353,6 @@ async def work(call: CallbackQuery, state=FSMContext):
             )
             await call.message.edit_text(text="Введите объем выполненной работы")
             await worker.reg_report.set()
-            print(2)
     conn.close()
 
 @dp.callback_query_handler(state=worker.search_input_task)
@@ -489,7 +487,7 @@ async def search_reg_report(message: Message, state=FSMContext):
                 await message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}", reply_markup=foreman_btn)
                 await worker.search_input_task.set()
             else:
-                btn = [InlineKeyboardButton(text="Нет", callback_data="Нет")]
+                btn = [[InlineKeyboardButton(text="Нет", callback_data="Нет")]]
                 btn_inl = InlineKeyboardMarkup(inline_keyboard=btn)
                 await state.update_data(job_value=mes)
                 await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ", reply_markup=btn_inl)
@@ -721,7 +719,6 @@ async def free_work(message: Message, state=FSMContext):
                 await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ",
                     reply_markup=btn_inl)
                 await worker.reg_report_time.set()
-                print(3)
         else:
             await message.answer("Объем работ должен быть целым числом! Введите заново")
             await worker.reg_report.set()
@@ -802,7 +799,6 @@ async def input_time(message: Message, state=FSMContext):
     else:
         await message.answer("Часы работы должны быть целым числом от 1 до 8! Введите заново")
         await worker.reg_report_time.set()
-    print(4)
     conn.close()
 
 @dp.callback_query_handler(state=worker.reg_report_time)

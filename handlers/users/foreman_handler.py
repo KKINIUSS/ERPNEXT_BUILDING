@@ -294,8 +294,8 @@ async def free_work(call: CallbackQuery, state=FSMContext):
     )
     cur = conn.cursor()
     conn.commit()
-    str = call.data
-    if (str == "Назад"):
+    st = call.data
+    if (st == "Назад"):
         cur.execute(f"select distinct worker_name, telegramid"
             f" from `tabWorker report` where status='На рассмотрении' and telegramidforeman='{call.from_user.id}'")
         a = cur.fetchall()
@@ -309,7 +309,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         await call.message.edit_text(text="Список отчетов", reply_markup=foreman_btn)
         await foreman.report_temp.set()
     else:
-        mas = str.split("+")
+        mas = st.split("+")
         cur.execute("select job, job_section, photo, job_value, worker_name, telegramid, phone_number, "
                     "foreman_name, telegramidforeman, phone_number_foreman, date, task_name, name, time "
                     "from `tabWorker report` where status='На рассмотрении' and telegramid=? and date=? and time=?", mas)
@@ -324,8 +324,10 @@ async def free_work(call: CallbackQuery, state=FSMContext):
         mis = [a[0][11]]
         cur.execute("select amount, progress_amount from tabTask where name=?", mis )
         b = cur.fetchall()
+        date = str(a[0][10])
+        time = str(a[0][13])
         await call.message.edit_text(f"Название работы: {a[0][0]}\nРаздел работы: {a[0][1]}\nОбъем работ: {a[0][3]}\nВыполнено на текущих момент: {b[0][1]}\n"
-                                     f"Общий объем работ: {b[0][0]}\nНомер телефона специалиста: {a[0][6]}\nИмя специалиста: {a[0][4]}\n", reply_markup=foreman_choise_free_btn)
+                                     f"Общий объем работ: {b[0][0]}\nНомер телефона специалиста: {a[0][6]}\nИмя специалиста: {a[0][4]}\nДата отчета: {date + ' ' + time}", reply_markup=foreman_choise_free_btn)
         await state.update_data(job=a[0][0], job_section=a[0][1], telegramid_report=a[0][5],
                                 photo_work=a[0][2], job_value=a[0][3],
                                 worker_name=a[0][4], phone_number_worker_report=a[0][6],
