@@ -141,6 +141,7 @@ async def work(call: CallbackQuery, state=FSMContext):
                                                    )
                 await call.message.edit_text(text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.", reply_markup=foreman_btn)
                 await worker.input_task.set()
+                print(1)
     conn.close()
 
 @dp.callback_query_handler(state=worker.search)
@@ -353,6 +354,7 @@ async def work(call: CallbackQuery, state=FSMContext):
             )
             await call.message.edit_text(text="Введите объем выполненной работы")
             await worker.reg_report.set()
+            print(2)
     conn.close()
 
 @dp.callback_query_handler(state=worker.search_input_task)
@@ -497,7 +499,7 @@ async def search_reg_report(message: Message, state=FSMContext):
             await worker.search_reg_report.set()
     conn.close()
 
-@dp.message_handler(state=worker.reg_report_time)
+@dp.message_handler(state=worker.search_reg_report_time)
 async def success(message: Message, state=FSMContext):
     conn = mariadb.connect(
         user=user,
@@ -719,6 +721,7 @@ async def free_work(message: Message, state=FSMContext):
                 await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ",
                     reply_markup=btn_inl)
                 await worker.reg_report_time.set()
+                print(3)
         else:
             await message.answer("Объем работ должен быть целым числом! Введите заново")
             await worker.reg_report.set()
@@ -799,6 +802,7 @@ async def input_time(message: Message, state=FSMContext):
     else:
         await message.answer("Часы работы должны быть целым числом от 1 до 8! Введите заново")
         await worker.reg_report_time.set()
+    print(4)
     conn.close()
 
 @dp.callback_query_handler(state=worker.reg_report_time)
@@ -863,6 +867,8 @@ async def answer_time(call: CallbackQuery, state=FSMContext):
             text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.",
             reply_markup=foreman_btn)
         await worker.input_task.set()
+
+
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=worker.job)
 async def end_session(call: CallbackQuery, state=FSMContext):
     conn = mariadb.connect(
