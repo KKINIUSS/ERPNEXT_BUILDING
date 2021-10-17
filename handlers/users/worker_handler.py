@@ -437,6 +437,8 @@ async def search_reg_report(message: Message, state=FSMContext):
         data = await state.get_data()
         mes = message.text
         flag = True
+        if(int(mes) == 0):
+            flag = False
         for i in mes:
             if(i >= '0' and i <= '9'):
                 pass
@@ -510,7 +512,7 @@ async def success(message: Message, state=FSMContext):
     conn.commit()
     mes = message.text
     flag = True
-    if(int(mes) > 8):
+    if(int(mes) > 8 or int(mes) == 0):
         flag = False
     for i in mes:
         if (i >= '0' and i <= '9'):
@@ -657,6 +659,8 @@ async def free_work(message: Message, state=FSMContext):
         data = await state.get_data()
         mes = message.text
         flag = True
+        if(int(mes) == 0):
+            flag = False
         for i in mes:
             if(i >= '0' and i <= '9'):
                 pass
@@ -737,7 +741,7 @@ async def input_time(message: Message, state=FSMContext):
     conn.commit()
     mes = message.text
     flag = True
-    if (int(mes) > 8):
+    if (int(mes) > 8 or int(mes) == 0):
         flag = False
     for i in mes:
         if (i >= '0' and i <= '9'):
