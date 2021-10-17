@@ -425,28 +425,114 @@ async def search_reg_report(message: Message, state=FSMContext):
     cur = conn.cursor()
     conn.commit()
     tgid = message.from_user.id
-    cur.execute(
-        "select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
+    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
     name = cur.fetchall()
     if (not name):
         await message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
         await worker.no_job.set()
     else:
         conn.commit()
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+        time = datetime.datetime.now().strftime('%H:%M:%S')
         data = await state.get_data()
         mes = message.text
-        st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+        flag = True
+        for i in mes:
+            if(i >= '0' and i <= '9'):
+                pass
+            else:
+                flag = False
+        if(flag):
+            cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
+            a = cur.fetchall()
+            if(a[0][6] != 'Сдельная'):
+                st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+                cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
+                phone_foreman = cur.fetchall()
+                mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
+                       data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
+                       tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', a[0][6], a[0][7]]
+                cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
+                            "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                conn.commit()
+                name_parent = [data.get("task_name")]
+                cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent)
+                name1 = cur.fetchall()
+                cur.execute(f"select object from tabEmployer where name='{message.from_user.id}'")
+                object = cur.fetchall()
+                parent_task_mas = [name1[0][0]]
+                free_work = []
+                params = data.get("search_query")
+                cur.execute(f"select name from tabTask where is_group='0' and pass_spec='1' and project='{object[0][0]}' and (subject like '{params}' or subject_company like '{params}') and parent_task='{data.get('search_parent_task')}'")
+                task = cur.fetchall()
+                for i in task:
+                    cur.execute("select subject, subject_company from tabTask where name=? and pass_spec='1'", [i[0]])
+                    parent = cur.fetchall()
+                    if (parent[0][1]):
+                        task_name = parent[0][1]
+                    else:
+                        task_name = parent[0][0]
+                    free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
+                free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                                   inline_keyboard=free_work,
+                                                   )
+                cur.execute(f"select subject, subject_company from tabTask where name='{data.get('search_parent_task')}' and pass_spec='1'")
+                parent = cur.fetchall()
+                if(parent[0][1]):
+                    task_name = parent[0][1]
+                else:
+                    task_name = parent[0][0]
+                await message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}", reply_markup=foreman_btn)
+                await worker.search_input_task.set()
+            else:
+                btn = [InlineKeyboardButton(text="Нет", callback_data="Нет")]
+                btn_inl = InlineKeyboardMarkup(inline_keyboard=btn)
+                await state.update_data(job_value=mes)
+                await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ", reply_markup=btn_inl)
+                await worker.search_reg_report_time.set()
+        else:
+            await message.answer("Объем работ должен быть целым числом! Введите заново")
+            await worker.search_reg_report.set()
+    conn.close()
+
+@dp.message_handler(state=worker.reg_report_time)
+async def success(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
+    conn.commit()
+    mes = message.text
+    flag = True
+    if(int(mes) > 8):
+        flag = False
+    for i in mes:
+        if (i >= '0' and i <= '9'):
+            pass
+        else:
+            flag = False
+    if(flag):
+        data = await state.get_data()
+        tgid = message.from_user.id
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+        time = datetime.datetime.now().strftime('%H:%M:%S')
         cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
         a = cur.fetchall()
+        st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
         cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
         phone_foreman = cur.fetchall()
         mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
-               data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6], a[0][7]]
+               data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time,  'На рассмотрении', f"Трафик {mes}-часовой", a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
-                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments, object)"
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
@@ -468,17 +554,84 @@ async def search_reg_report(message: Message, state=FSMContext):
                 task_name = parent[0][0]
             free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
         free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
-        foreman_btn = InlineKeyboardMarkup(row_width=1,
-                                           inline_keyboard=free_work,
-                                           )
+        foreman_btn = InlineKeyboardMarkup(row_width=1, inline_keyboard=free_work,)
         cur.execute(f"select subject, subject_company from tabTask where name='{data.get('search_parent_task')}' and pass_spec='1'")
         parent = cur.fetchall()
-        if(parent[0][1]):
+        if (parent[0][1]):
             task_name = parent[0][1]
         else:
             task_name = parent[0][0]
-        await message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}", reply_markup=foreman_btn)
+        await message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}",
+                             reply_markup=foreman_btn)
         await worker.search_input_task.set()
+    else:
+        await message.answer("Часы работы должны быть целым числом от 1 до 8! Введите заново")
+        await worker.search_reg_report_time.set()
+    conn.close()
+
+@dp.callback_query_handler(state=worker.search_reg_report_time)
+async def cancel(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
+    conn.commit()
+    data = await state.get_data()
+    tgid = call.from_user.id
+    date = datetime.datetime.now().strftime('%Y-%m-%d')
+    time = datetime.datetime.now().strftime('%H:%M:%S')
+    cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
+    a = cur.fetchall()
+    st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+    cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
+    phone_foreman = cur.fetchall()
+    mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
+           data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
+           tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', a[0][6], a[0][7]]
+    cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
+                "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+    conn.commit()
+    await call.message.answer("Ваш отчёт направлен прорабу")
+    name_parent = [data.get("task_name")]
+    cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent)
+    name1 = cur.fetchall()
+    cur.execute(f"select object from tabEmployer where name='{call.from_user.id}'")
+    object = cur.fetchall()
+    parent_task_mas = [name1[0][0]]
+    free_work = []
+    params = data.get("search_query")
+    cur.execute(f"select name from tabTask where is_group='0' and pass_spec='1' and project='{object[0][0]}' "
+                f"and (subject like '{params}' or subject_company like '{params}') "
+                f"and parent_task='{data.get('search_parent_task')}'")
+    task = cur.fetchall()
+    for i in task:
+        cur.execute("select subject, subject_company from tabTask "
+                    "where name=? and pass_spec='1'", [i[0]])
+        parent = cur.fetchall()
+        if (parent[0][1]):
+            task_name = parent[0][1]
+        else:
+            task_name = parent[0][0]
+        free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
+    free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+    foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                       inline_keyboard=free_work,
+                                       )
+    cur.execute(f"select subject, subject_company from tabTask "
+                f"where name='{data.get('search_parent_task')}' and pass_spec='1'")
+    parent = cur.fetchall()
+    if (parent[0][1]):
+        task_name = parent[0][1]
+    else:
+        task_name = parent[0][0]
+    await call.message.answer(f"Результаты поиска в разделе {task_name} по запросу {data.get('search_query')}",
+                         reply_markup=foreman_btn)
+    await worker.search_input_task.set()
     conn.close()
 
 @dp.message_handler(state=worker.reg_report)
@@ -493,46 +646,141 @@ async def free_work(message: Message, state=FSMContext):
     cur = conn.cursor()
     conn.commit()
     tgid = message.from_user.id
-    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
+    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer "
+                "where telegramid=%s" % tgid)
     name = cur.fetchall()
     if (not name):
         await message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
         await worker.no_job.set()
     else:
         conn.commit()
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         data = await state.get_data()
         mes = message.text
-        st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
-        cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" %tgid)
+        flag = True
+        for i in mes:
+            if(i >= '0' and i <= '9'):
+                pass
+            else:
+                flag = False
+        if(flag):
+            cur.execute("select fio, phone_number, telegramid, foreman, dateobj, "
+                        "telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
+            a = cur.fetchall()
+            if(a[0][6] != 'Сдельная'):
+                date = datetime.datetime.now().strftime('%Y-%m-%d')
+                time = datetime.datetime.now().strftime('%H:%M:%S')
+                st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+                cur.execute("select phone_number from tabEmployer where telegramid=%s" %a[0][5])
+                phone_foreman = cur.fetchall()
+                mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator", data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
+                       tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', a[0][6], a[0][7]]
+                cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
+                            "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                conn.commit()
+                await message.answer("Ваш отчёт направлен прорабу")
+                name_parent = [data.get("task_name")]
+                cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent )
+                name1 = cur.fetchall()
+                parent_task_mas = [name1[0][0]]
+                free_work = []
+                cur.execute("select name, subject, subject_company  from tabTask where parent_task=? and pass_spec='1'", parent_task_mas)
+                task = cur.fetchall()
+                if(len(task) < 49):
+                    for i in task:
+                        if(i[2]):
+                            task_name = i[2]
+                        else:
+                            task_name = i[1]
+                        free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
+                    free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                    foreman_btn = InlineKeyboardMarkup(row_width=1,
+                        inline_keyboard=free_work,
+                    )
+                    cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
+                    subject = cur.fetchall()
+                    await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
+                    await message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
+                    await worker.input_task.set()
+                else:
+                    free_work = []
+                    free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+                    foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                                       inline_keyboard=free_work,
+                                                       )
+                    await message.answer(
+                        text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.",
+                        reply_markup=foreman_btn)
+                    await worker.input_task.set()
+            else:
+                btn = [InlineKeyboardButton(text="Нет", callback_data="Нет")]
+                btn_inl = InlineKeyboardMarkup(inline_keyboard=btn)
+                await state.update_data(job_value=mes)
+                await message.answer("Если работа выполнялась по тарифу - введите количество часов.\nЕсли нет - нажмите 'Нет' ",
+                    reply_markup=btn_inl)
+                await worker.reg_report_time.set()
+        else:
+            await message.answer("Объем работ должен быть целым числом! Введите заново")
+            await worker.reg_report.set()
+    conn.close()
+
+@dp.message_handler(state=worker.reg_report_time)
+async def input_time(message: Message, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
+    conn.commit()
+    mes = message.text
+    flag = True
+    if (int(mes) > 8):
+        flag = False
+    for i in mes:
+        if (i >= '0' and i <= '9'):
+            pass
+        else:
+            flag = False
+    if (flag):
+        data = await state.get_data()
+        tgid = message.from_user.id
+        date = datetime.datetime.now().strftime('%Y-%m-%d')
+        time = datetime.datetime.now().strftime('%H:%M:%S')
+        cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
         a = cur.fetchall()
-        cur.execute("select phone_number from tabEmployer where telegramid=%s" %a[0][5])
+        st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+        cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
         phone_foreman = cur.fetchall()
-        mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator", data.get("task_subject"), data.get("parent_task_subject"), "", mes, a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], now, 'На рассмотрении', a[0][6], a[0][7]]
+        mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
+               data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', f"Трафик {mes}-часовой",
+               a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
-                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, status, payments, object)"
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
         conn.commit()
         await message.answer("Ваш отчёт направлен прорабу")
         name_parent = [data.get("task_name")]
-        cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent )
+        cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent)
         name1 = cur.fetchall()
         parent_task_mas = [name1[0][0]]
         free_work = []
         cur.execute("select name, subject, subject_company  from tabTask where parent_task=? and pass_spec='1'", parent_task_mas)
         task = cur.fetchall()
-        if(len(task) < 49):
+        if (len(task) < 49):
             for i in task:
-                if(i[2]):
+                if (i[2]):
                     task_name = i[2]
                 else:
                     task_name = i[1]
                 free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
             free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
             foreman_btn = InlineKeyboardMarkup(row_width=1,
-                inline_keyboard=free_work,
-            )
+                                               inline_keyboard=free_work,
+                                               )
             cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
             subject = cur.fetchall()
             await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
@@ -548,8 +796,73 @@ async def free_work(message: Message, state=FSMContext):
                 text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.",
                 reply_markup=foreman_btn)
             await worker.input_task.set()
+    else:
+        await message.answer("Часы работы должны быть целым числом от 1 до 8! Введите заново")
+        await worker.reg_report_time.set()
     conn.close()
 
+@dp.callback_query_handler(state=worker.reg_report_time)
+async def answer_time(call: CallbackQuery, state=FSMContext):
+    conn = mariadb.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    cur = conn.cursor()
+    conn.commit()
+    data = await state.get_data()
+    tgid = call.from_user.id
+    date = datetime.datetime.now().strftime('%Y-%m-%d')
+    time = datetime.datetime.now().strftime('%H:%M:%S')
+    cur.execute("select fio, phone_number, telegramid, foreman, dateobj, telegramidforeman, payments, object from tabEmployer where telegramid=%s" % tgid)
+    a = cur.fetchall()
+    st = str(datetime.datetime.now()) + " " + str(data.get("task_name") + " " + str(tgid))
+    cur.execute("select phone_number from tabEmployer where telegramid=%s" % a[0][5])
+    phone_foreman = cur.fetchall()
+    mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
+           data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
+           tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', a[0][6], a[0][7]]
+    cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
+                "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
+    conn.commit()
+    await call.message.answer("Ваш отчёт направлен прорабу")
+    name_parent = [data.get("task_name")]
+    cur.execute("select parent_task from tabTask where name=? and pass_spec='1'", name_parent)
+    name1 = cur.fetchall()
+    parent_task_mas = [name1[0][0]]
+    free_work = []
+    cur.execute("select name, subject, subject_company  from tabTask where parent_task=? and pass_spec='1'",
+                parent_task_mas)
+    task = cur.fetchall()
+    if (len(task) < 49):
+        for i in task:
+            if (i[2]):
+                task_name = i[2]
+            else:
+                task_name = i[1]
+            free_work.append([InlineKeyboardButton(text=task_name, callback_data=i[0])])
+        free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+        foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                           inline_keyboard=free_work,
+                                           )
+        cur.execute("select subject from tabTask where name=? and pass_spec='1'", parent_task_mas)
+        subject = cur.fetchall()
+        await state.update_data(parent_task_name=parent_task_mas, parent_task_subject=subject[0][0])
+        await call.message.answer(text="Работы в разделе %s" % subject[0][0], reply_markup=foreman_btn)
+        await worker.input_task.set()
+    else:
+        free_work = []
+        free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
+        foreman_btn = InlineKeyboardMarkup(row_width=1,
+                                           inline_keyboard=free_work,
+                                           )
+        await call.message.answer(
+            text="В данном разделе слишком много работ. Воспользуйтесь поиском, чтобы найти работу.",
+            reply_markup=foreman_btn)
+        await worker.input_task.set()
 @dp.callback_query_handler(text_contains="serv:Закончить рабочий день", state=worker.job)
 async def end_session(call: CallbackQuery, state=FSMContext):
     conn = mariadb.connect(
@@ -562,27 +875,25 @@ async def end_session(call: CallbackQuery, state=FSMContext):
     cur = conn.cursor()
     conn.commit()
     tgid = call.from_user.id
-    cur.execute("select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid=%s" % tgid)
+    cur.execute(f"select fio, telegramidforeman, foreman, object, phone_number from tabEmployer where telegramid='{tgid}'")
     name = cur.fetchall()
     if (not name):
         await call.message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
         await worker.no_job.set()
     else:
-        cur.execute("update tabEmployer set activity='0' where name=?", [call.from_user.id])
+        cur.execute(f"update tabEmployer set activity='0' where name='{call.from_user.id}'")
         conn.commit()
         data = await state.get_data()
-        mas = [datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), data.get("date_join"), call.from_user.id]
-        mes = [data.get("date_join"), tgid]
-        cur.execute("select * from `tabWorker activity` where date_join=? and telegramid=?", mes)
+        cur.execute(f"select * from `tabWorker activity` where name='{data.get('date_worker')}'")
         a = cur.fetchall()
         if(a):
-            cur.execute("update `tabWorker activity` set date_end=? where date_join=? and telegramid=?", mas)
+            cur.execute(f"update `tabWorker activity` set time_end='{datetime.datetime.now().strftime('%H:%M:%S')}' where name='{data.get('date_worker')}'")
             conn.commit()
             await call.message.delete()
             await call.message.answer(text="Вы закончили рабочий день", reply_markup=worker_start_job)
             await state.finish()
         else:
-            cur.execute("delete from `tabWorker activity temp` where telegramid=%s" %tgid)
+            cur.execute(f"delete from `tabWorker activity temp` where name='{data.get('date_worker')}'")
             conn.commit()
             await call.message.delete()
             await call.message.answer(text="Вы закончили рабочий день", reply_markup=worker_start_job)

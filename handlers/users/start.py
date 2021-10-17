@@ -93,8 +93,18 @@ async def join_job(message: Message, state: FSMContext):
                 obj = cur.fetchall()
                 if (obj[0][0]):
                     mesag = await message.answer('Добрый день!', reply_markup=ReplyKeyboardRemove())
-                    # await bot.delete_message(message.from_user.id, mesag.message_id)
                     await bot.send_message(message.from_user.id, text="Главное меню", reply_markup=foreman_menu)
+                    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    cur.execute("select fio, role from tabEmployer where telegramid=%s" % message.from_user.id)
+                    tg = cur.fetchall()
+                    st = str(now) + " " + str(message.from_user.id)
+                    date = datetime.now().strftime('%Y-%m-%d')
+                    time = datetime.now().strftime('%H:%M:%S')
+                    mas = [st, now, "Administrator", tg[0][0], date, time, message.from_user.id, tg[0][1]]
+                    cur.execute("insert into `tabWorker activity` (name ,creation ,owner, fio, date, time_join, telegramid, role)"
+                                " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    conn.commit()
+                    await state.update_data(date_foreman=st)
                     conn.close()
                     await foreman.job.set()
                 else:
@@ -103,23 +113,23 @@ async def join_job(message: Message, state: FSMContext):
             elif (a[0][2] == 'Специалист'):
                 if (a[0][3]):
                     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    cur.execute("select telegramidforeman, fio from tabEmployer where telegramid=%s" % message.from_user.id)
+                    cur.execute("select telegramidforeman, fio, role from tabEmployer where telegramid=%s" % message.from_user.id)
                     tg = cur.fetchall()
                     st = str(now) + " " + str(message.from_user.id)
-                    time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    mas = [st, now, "Administrator", tg[0][1], time, None, message.from_user.id, tg[0][0]]
-                    cur.execute("insert into `tabWorker activity temp` (name ,creation ,owner, fio, date_join, "
-                                "date_end, telegramid, telegramidforeman)"
-                        " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", mas)
+                    date = datetime.now().strftime('%Y-%m-%d')
+                    time = datetime.now().strftime('%H:%M:%S')
+                    mas = [st, now, "Administrator", tg[0][1], date, time, message.from_user.id, tg[0][0], tg[0][2]]
+                    cur.execute("insert into `tabWorker activity temp` (name ,creation ,owner, fio, date, "
+                                "time_join, telegramid, telegramidforeman, role)"
+                        " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
                     conn.commit()
                     cur.execute("update tabEmployer set activity=1 where name=?", [mes])
                     conn.commit()
                     mesag = await message.answer('Добрый день!', reply_markup=ReplyKeyboardRemove())
-                    # await bot.delete_message(message.from_user.id, mesag.message_id)
                     await bot.send_message(message.from_user.id, text="Главное меню", reply_markup=worker_menu_company)
                     conn.close()
                     await worker.job.set()
-                    await state.update_data(date_join=time)
+                    await state.update_data(date_worker=st)
                 else:
                     await message.answer("Добрый день, у вас нет руководителя, нажмите на кнопку, чтобы проверить обновления.\n\n⚠️ Тех.поддержка https://t.me/auxiliume\n\n📞 Телефон тех. поддержки +79994601211 (Игорь)", disable_web_page_preview=True, reply_markup=worker_no_job)
                     conn.close()
@@ -149,8 +159,7 @@ async def join_job(message: Message, state: FSMContext):
             await message.answer("Вы уволены.", reply_markup=ReplyKeyboardRemove())
             conn.close()
     else:
-        await message.answer(
-            'Нажмите кнопку "Зарегистрироваться", чтобы пройти регистрацию.\n\nПосле подтверждения личности, вы можете начать работу!\n\n⚠️ Связаться с тех.поддержкой https://t.me/auxiliume \n\n📞 Либо позвоните по телефону +79994601211 (Игорь)',
+        await message.answer('Нажмите кнопку "Зарегистрироваться", чтобы пройти регистрацию.\n\nПосле подтверждения личности, вы можете начать работу!\n\n⚠️ Связаться с тех.поддержкой https://t.me/auxiliume \n\n📞 Либо позвоните по телефону +79994601211 (Игорь)',
             disable_web_page_preview=True, reply_markup=reg)
         conn.close()
 
