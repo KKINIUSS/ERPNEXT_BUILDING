@@ -57,7 +57,7 @@ async def free_work(call: CallbackQuery, state=FSMContext):
     else:
         cur.execute(f"select fio, time_join, telegramidforeman, name, date, telegramid from `tabWorker activity temp` where name='{str}'")
         a = cur.fetchall()
-        cur.execute("select phone_number from tabEmployer where telegramid=%s" % str)
+        cur.execute(f"select phone_number from tabEmployer where name='{a[0][5]}'")
         tg = cur.fetchall()
         free_work = [[InlineKeyboardButton(text="Принять", callback_data="Принять")], [InlineKeyboardButton(text="Отклонить", callback_data="Отклонить")], [InlineKeyboardButton(text="Назад", callback_data="Назад")]]
         time_work = ""
