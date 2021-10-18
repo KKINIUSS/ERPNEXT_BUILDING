@@ -531,7 +531,7 @@ async def success(message: Message, state=FSMContext):
         phone_foreman = cur.fetchall()
         mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
                data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time,  'На рассмотрении', f"Трафик {mes}-часовой", a[0][7]]
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time,  'На рассмотрении', f"Тариф {mes}-часовой", a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
                     "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", mas)
@@ -760,7 +760,7 @@ async def input_time(message: Message, state=FSMContext):
         phone_foreman = cur.fetchall()
         mas = [datetime.datetime.now(), data.get("task_name"), st, datetime.datetime.now(), "Administrator",
                data.get("task_subject"), data.get("parent_task_subject"), "", data.get("job_value"), a[0][0],
-               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', f"Трафик {mes}-часовой",
+               tgid, a[0][1], a[0][3], a[0][5], phone_foreman[0][0], date, time, 'На рассмотрении', f"Тариф {mes}-часовой",
                a[0][7]]
         cur.execute("insert into `tabWorker report` (modified, task_name, name ,creation ,owner, "
                     "job, job_section, photo, job_value, worker_name, telegramid, phone_number, foreman_name, telegramidforeman, phone_number_foreman, date, time, status, payments, object)"
