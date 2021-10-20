@@ -352,7 +352,7 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         await state.update_data(telegramid_report=data.get("telegramid_report"))
         temp = [data.get("telegramid_report"), call.from_user.id]
         cur.execute("select job, job_section, photo, job_value, worker_name, telegramid, phone_number, "
-                    "foreman_name, phone_number_foreman, date, time"
+                    "foreman_name, phone_number_foreman, date, time "
                     "from `tabWorker report` where status='На рассмотрении' and telegramid=? and telegramidforeman=?", temp)
         a = cur.fetchall()
         cur.execute("select fio from tabEmployer where telegramid=%s" % temp[0])
