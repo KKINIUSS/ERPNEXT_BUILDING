@@ -15,7 +15,6 @@ async def join_session(message: Message):
     await message.answer("Добрый день, сегодня %s число." %now.strftime("%d-%m-%Y"), reply_markup=foreman_menu)
     await foreman.job.set()
 
-
 @dp.callback_query_handler(text_contains="serv:Журнал учёта специалистов", state=foreman.job)
 async def check_time(call: CallbackQuery, state=FSMContext):
     conn = mariadb.connect(
@@ -353,15 +352,14 @@ async def invite_team(call: CallbackQuery, state=FSMContext):
         await state.update_data(telegramid_report=data.get("telegramid_report"))
         temp = [data.get("telegramid_report"), call.from_user.id]
         cur.execute("select job, job_section, photo, job_value, worker_name, telegramid, phone_number, "
-                    "foreman_name, phone_number_foreman, date, task_name "
+                    "foreman_name, phone_number_foreman, date, time"
                     "from `tabWorker report` where status='На рассмотрении' and telegramid=? and telegramidforeman=?", temp)
         a = cur.fetchall()
         cur.execute("select fio from tabEmployer where telegramid=%s" % temp[0])
         c = cur.fetchall()
         free_work = []
         for i in a:
-            st = i[9]
-            st = str(st)
+            st = str(i[9]) + "+" + str(i[10])
             free_work.append([InlineKeyboardButton(text=i[0], callback_data=i[5] + "+" + st)])
         free_work.append([InlineKeyboardButton(text="Назад", callback_data="Назад")])
         foreman_btn = InlineKeyboardMarkup(
