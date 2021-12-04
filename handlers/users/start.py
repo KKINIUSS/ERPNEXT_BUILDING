@@ -1,6 +1,6 @@
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.builtin import CommandStart
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.default.registation import reg
 from loader import dp
 import mariadb
@@ -112,6 +112,14 @@ async def join_job(message: Message, state: FSMContext):
                     conn.close()
             elif (a[0][2] == 'Специалист'):
                 if (a[0][3]):
+                    btn = []
+                    btn.append([InlineKeyboardButton(text="Понятно", callback_data="Понятно")])
+                    bnt_inl = InlineKeyboardMarkup(
+                        inline_keyboard=btn,
+                    )
+                    await bot.send_message(a[0][3],
+                                           f"Специалист {a[0][0]} только что вышел на работу, подтвердите его выход.",
+                                           reply_markup=bnt_inl)
                     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     cur.execute("select telegramidforeman, fio, role from tabEmployer where telegramid=%s" % message.from_user.id)
                     tg = cur.fetchall()
