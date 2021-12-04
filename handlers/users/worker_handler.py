@@ -8,7 +8,7 @@ from keyboards.inline.worker import worker_menu, worker_menu_company
 from keyboards.default.worker_no_job import worker_no_job
 import mariadb
 from data.config import user, password, host, port, database
-
+from loader import bot
 subject_task = ""
 parent_task = ""
 @dp.message_handler(state=worker.start_job)
@@ -29,6 +29,13 @@ async def join_session(message: Message, state=FSMContext):
         await message.answer("Вас еще не взяли на работу", reply_markup=worker_no_job)
         await worker.no_job.set()
     else:
+        if(name[0][1]):
+            btn = []
+            btn.append([InlineKeyboardButton(text="Понятно", callback_data="Понятно")])
+            bnt_inl = InlineKeyboardMarkup(
+                inline_keyboard=btn,
+            )
+            await bot.send_message(name[0][1], f"Специалист {name[0][0]} только что вышел на работу, подтвердите его выход.", reply_markup=bnt_inl)
         await state.update_data(telegramid=tgid, name_worker=name[0][0], name_foreman=name[0][2], telegramidforeman=name[0][1], object=name[0][3], phone_number=name[0][4])
         cur.execute("select phone_number from tabEmployer where telegramid=%s" %name[0][1])
         a = cur.fetchall()
